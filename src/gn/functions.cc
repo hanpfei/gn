@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "base/environment.h"
+#include "base/files/file_util.h"
 #include "base/strings/string_util.h"
 #include "gn/build_settings.h"
 #include "gn/config.h"
@@ -1288,6 +1289,48 @@ Value RunStringSplit(Scope* scope,
   return result;
 }
 
+// path_exists -----------------------------------------------------------------
+
+const char kPathExists[] = "path_exists";
+const char kPathExists_HelpShort[] = "path_exists: Check whether the path exists.";
+const char kPathExists_Help[] =
+    R"(path_exists: Check whether the path exists.
+
+Examples
+
+  path_exists("file_abc")
+)";
+
+Value RunPathExists(Scope* scope,
+                    const FunctionCallNode* function,
+                    const std::vector<Value>& args,
+                    Err* err) {
+  if (args.empty() || args.size() > 1 || (!args[0].VerifyTypeIs(Value::STRING, err))) {
+    *err = Err(Value(), "Calling path_exists on an empty string or more than on string.");
+    return Value(function, false);
+  }
+  const std::string& input_string = args[0].string_value();
+  if (input_string.empty()) {
+    *err = Err(args[0], "Calling path_exists on an empty string.");
+    return Value(function, false);
+  }
+
+  const SourceDir& current_dir = scope->GetSourceDir();
+
+  bool as_dir =
+      !input_string.empty() && input_string[input_string.size() - 1] == '/';
+
+  const Settings* settings = scope->settings();
+  std::string path = current_dir.ResolveRelativeAs(
+      !as_dir, args[0], err, settings->build_settings()->root_path_utf8(),
+      &input_string);
+
+  base::FilePath file_path(path);
+
+  bool exist = base::PathExists(file_path) || base::DirectoryExists(file_path);
+  return Value(function, exist);
+}
+
 // -----------------------------------------------------------------------------
 
 FunctionInfo::FunctionInfo()
@@ -1402,6 +1445,7 @@ struct FunctionInfoInitializer {
     INSERT_FUNCTION(StringJoin, false)
     INSERT_FUNCTION(StringReplace, false)
     INSERT_FUNCTION(StringSplit, false)
+    INSERT_FUNCTION(PathExists, false)
     INSERT_FUNCTION(Template, false)
     INSERT_FUNCTION(Tool, false)
     INSERT_FUNCTION(Toolchain, false)
