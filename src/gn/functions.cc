@@ -12,6 +12,7 @@
 #include "base/environment.h"
 #include "base/files/file_util.h"
 #include "base/strings/string_util.h"
+#include "base/strings/utf_string_conversions.h"
 #include "gn/build_settings.h"
 #include "gn/config.h"
 #include "gn/config_values_generator.h"
@@ -1325,7 +1326,14 @@ Value RunPathExists(Scope* scope,
       !as_dir, args[0], err, settings->build_settings()->root_path_utf8(),
       &input_string);
 
-  base::FilePath file_path(path);
+  base::FilePath file_path;
+#if defined(OS_WIN)
+  std::u16string u16_path;
+  base::UTF8ToUTF16(path.c_str(), path.size(), &u16_path);
+  file_path = file_path.Append(std::string_view(u16_path));
+#elif defined(OS_POSIX) || defined(OS_FUCHSIA)
+  file_path = file_path.Append(std::string_view(path));
+#endif
 
   bool exist = base::PathExists(file_path) || base::DirectoryExists(file_path);
   return Value(function, exist);

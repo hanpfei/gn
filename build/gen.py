@@ -515,7 +515,7 @@ def WriteGNNinja(path, platform, host, options, args_list):
         '/D_WIN32_WINNT=0x0A00',
         '/FS',
         '/W4',
-        '/WX',
+        # '/WX', Warning as error
         '/Zi',
         '/wd4099',
         '/wd4100',
@@ -530,7 +530,9 @@ def WriteGNNinja(path, platform, host, options, args_list):
         '/D_HAS_EXCEPTIONS=0',
     ])
 
-    ldflags.extend(['/DEBUG', '/MACHINE:x64'])
+    ldflags.extend(['/DEBUG',
+                    # s'/MACHINE:x64'
+                    ])
 
   static_libraries = {
       'base': {'sources': [
