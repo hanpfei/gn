@@ -1330,9 +1330,9 @@ Value RunPathExists(Scope* scope,
 #if defined(OS_WIN)
   std::u16string u16_path;
   base::UTF8ToUTF16(path.c_str(), path.size(), &u16_path);
-  file_path = file_path.Append(std::string_view(u16_path));
+  file_path = file_path.Append(u16_path);
 #elif defined(OS_POSIX) || defined(OS_FUCHSIA)
-  file_path = file_path.Append(std::string_view(path));
+  file_path = file_path.Append(path);
 #endif
 
   bool exist = base::PathExists(file_path) || base::DirectoryExists(file_path);
