@@ -1328,6 +1328,9 @@ Value RunPathExists(Scope* scope,
 
   base::FilePath file_path;
 #if defined(OS_WIN)
+  while (path[0] == '/') {
+    path.erase(path.begin());
+  }
   std::u16string u16_path;
   base::UTF8ToUTF16(path.c_str(), path.size(), &u16_path);
   file_path = file_path.Append(u16_path);
